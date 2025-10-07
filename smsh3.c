@@ -1,10 +1,11 @@
 #include <stdio.h>
-#include <ctype.h>
-#include <signal.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <string.h>
-#include <sys/wait.h>
+#include <ctype.h> 
+#include <signal.h> 
+#include <stdlib.h> 
+#include <unistd.h> 
+#include <string.h> 
+#include <sys/wait.h> 
+#include "varlib.h" 
 
 #define YES 1
 #define NO 0
@@ -235,16 +236,11 @@ int syn_err(char *msg) {
 int assign(char *);
 int okname(char *);
 
-extern void VList();
-extern int VLstore(char *, char *);
-extern void VLookup(char *);
-extern int VLexport(char *);
-
 int builtin_command(char **args, int *resultp) {
     int rv = 0;
 
     if (strcmp(args[0], "set") == 0) {
-        VList();
+        VLlist();
         *resultp = 0;
         rv = 1;
     } else if (strchr(args[0], '=') != NULL) {
