@@ -166,7 +166,7 @@ int process(char **args) {
         rv = do_control_command(args);
     else if (ok_to_execute())
         if (!builtin_command(args, &rv))
-        rv = execute(args);
+            rv = execute(args);
     return rv;
 }
 
@@ -238,7 +238,6 @@ int okname(char *);
 
 int builtin_command(char **args, int *resultp) {
     int rv = 0;
-
     if (strcmp(args[0], "set") == 0) {
         VLlist();
         *resultp = 0;
@@ -268,7 +267,7 @@ int assign(char *str) {
 
 int okname(char *str) {
     char *cp;
-    for (cp = str; cp; cp++) {
+    for (cp = str; *cp; cp++) {
         if ((isdigit(*cp) && cp == str) || !(isalnum(*cp) || *cp == '_'))
             return 0;
     }
