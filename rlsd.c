@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <ctype.h>
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -12,6 +13,14 @@
 #define HOSTLEN 256
 #define oops(msg) {perror(msg);exit(1);}
 
+void sanitize(char *str) {
+    char *src, *dest;
+    for (src = dest = str; *src; src++)
+        if (*src == '/' || isalnum(*src))
+            *dest++ = *str;
+    *dest = '\0';
+}
+
 int main(int argc, char **argv) {
     struct sockaddr_in saddr;
     struct hostent *hp;
@@ -19,7 +28,7 @@ int main(int argc, char **argv) {
     int sock_id, sock_fd;
     FILE *sock_fpi, *sock_fpo;
     FILE *pipe_fp;
-    char dirname[BUFSIZ];
+    char dirname[BUFSIZ - 5];
     char command[BUFSIZ];
     int dirlen, c;
 
@@ -27,7 +36,7 @@ int main(int argc, char **argv) {
     if (sock_id == -1)
         oops("socket");
     
-    bzero((void*)saddr, sizeof(saddr));
+    bzero((void*)&saddr, sizeof(saddr));
     gethostname(hostname, HOSTLEN);
     hp = gethostbyname(hostname);
     bcopy((void*)hp->h_addr, (void*)&saddr.sin_addr, hp->h_length);
@@ -38,6 +47,26 @@ int main(int argc, char **argv) {
 
     if (listen(sock_id, 1) != 0)
         oops("listen");
-
+    
+    while (1) {
+        sock_fd = accept(sock_id, NULL, NULL);
+        if (sock_fd == -1)
+            oops("accept");
+        if ((sock_fpi = fdopen(sock_fd, "r")) == NULL)
+            oops("fdopen reading");
+        if (fgets(dirname, BUFSIZ - 5, sock_fpi) == NULL)
+            oops("reading dirname");
+        sanitize(dirname);
+        if ((sock_fpo = fdopen(sock_fd, "w")) == NULL)
+            oops("fdopen writing");
+        sprintf(command, "ls %s", dirname);
+        if ((pipe_fp = popen(command, "r")) == NULL)
+            oops("popen");
+        while ((c = getc(pipe_fp)) != EOF)
+            putc(c, sock_fpo);
+        pclose(pipe_fp);
+        fclose(sock_fpo);
+        fclose(sock_fpi);
+    }
     
 }
