@@ -17,7 +17,7 @@ void sanitize(char *str) {
     char *src, *dest;
     for (src = dest = str; *src; src++)
         if (*src == '/' || isalnum(*src))
-            *dest++ = *str;
+            *dest++ = *src;
     *dest = '\0';
 }
 
@@ -31,6 +31,9 @@ int main(int argc, char **argv) {
     char dirname[BUFSIZ - 5];
     char command[BUFSIZ];
     int dirlen, c;
+
+    int reuse = 1;
+    setsockopt(sock_id, SOL_SOCKET, SO_REUSEADDR, &reuse, sizeof(reuse));
 
     sock_id = socket(AF_INET, SOCK_STREAM, 0);
     if (sock_id == -1)
